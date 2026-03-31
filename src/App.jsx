@@ -255,7 +255,6 @@ function App() {
     if (newBuyItemText.trim() !== '') {
       setStuffToBuy([...stuffToBuy, newBuyItemText.trim()]);
       setNewBuyItemText('');
-      setShowAddBuyItem(false);
     }
   };
 
@@ -539,11 +538,15 @@ function App() {
                   type="text"
                   value={newBuyItemText}
                   onChange={(e) => setNewBuyItemText(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleAddBuyItem(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddBuyItem();
+                    if (e.key === 'Escape') setShowAddBuyItem(false);
+                  }}
                   placeholder="New item..."
                   autoFocus
                 />
                 <button className="btn" onClick={handleAddBuyItem}>+</button>
+                <button className="btn btn-outline" onClick={() => setShowAddBuyItem(false)}>Cancel</button>
               </div>
             )}
           </div>
