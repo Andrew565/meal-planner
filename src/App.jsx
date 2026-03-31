@@ -41,10 +41,14 @@ function App() {
   const [isLoadingSheet, setIsLoadingSheet] = useState(false);
   const [sheetError, setSheetError] = useState("");
 
-  const [weeksPlan, setWeeksPlan] = useState({
-    Mo: [], Tu: [], We: [], Th: [], Fr: [], Sa: [], Su: []
+  const [weeksPlan, setWeeksPlan] = useState(() => {
+    const saved = localStorage.getItem('mealPlannerWeeksPlan');
+    return saved ? JSON.parse(saved) : { Mo: [], Tu: [], We: [], Th: [], Fr: [], Sa: [], Su: [] };
   });
-  const [stuffToBuy, setStuffToBuy] = useState([]);
+  const [stuffToBuy, setStuffToBuy] = useState(() => {
+    const saved = localStorage.getItem('mealPlannerStuffToBuy');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const [newBuyItemText, setNewBuyItemText] = useState("");
   const [showAddBuyItem, setShowAddBuyItem] = useState(false);
@@ -151,6 +155,14 @@ function App() {
       loadSheetData(savedUrl);
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('mealPlannerWeeksPlan', JSON.stringify(weeksPlan));
+  }, [weeksPlan]);
+
+  useEffect(() => {
+    localStorage.setItem('mealPlannerStuffToBuy', JSON.stringify(stuffToBuy));
+  }, [stuffToBuy]);
 
   const handleSaveSettings = () => {
     localStorage.setItem('mealPlannerSheetUrl', sheetUrl);
@@ -288,12 +300,20 @@ function App() {
     window.print();
   };
 
+  const handleClearAll = () => {
+    if (window.confirm("Are you sure you want to clear the entire meal plan and shopping list?")) {
+      setWeeksPlan({ Mo: [], Tu: [], We: [], Th: [], Fr: [], Sa: [], Su: [] });
+      setStuffToBuy([]);
+    }
+  };
+
   return (
     <div className="app-container">
       <header className="header no-print">
         <h1>Meal Planner</h1>
         <div className="header-buttons">
           <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} className="btn btn-outline">Settings</button>
+          <button onClick={handleClearAll} className="btn btn-outline">Clear All</button>
           <button onClick={copyToClipboard} className="btn">Copy to Clipboard</button>
           <button onClick={handlePrint} className="btn btn-outline">Print</button>
         </div>
