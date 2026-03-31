@@ -53,6 +53,9 @@ function App() {
   const [newBuyItemText, setNewBuyItemText] = useState("");
   const [showAddBuyItem, setShowAddBuyItem] = useState(false);
 
+  const [editingBuyItemIndex, setEditingBuyItemIndex] = useState(null);
+  const [editingBuyItemText, setEditingBuyItemText] = useState("");
+
   const [activeCustomDay, setActiveCustomDay] = useState(null);
   const [customText, setCustomText] = useState("");
   const [customType, setCustomType] = useState("main");
@@ -256,6 +259,38 @@ function App() {
     }
   };
 
+  const handleRemoveBuyItem = (index) => {
+    setStuffToBuy(prev => prev.filter((_, i) => i !== index));
+    if (editingBuyItemIndex === index) {
+      setEditingBuyItemIndex(null);
+      setEditingBuyItemText("");
+    }
+  };
+
+  const handleStartEditBuyItem = (index, text) => {
+    setEditingBuyItemIndex(index);
+    setEditingBuyItemText(text);
+  };
+
+  const handleSaveEditBuyItem = (index) => {
+    if (editingBuyItemText.trim()) {
+      setStuffToBuy(prev => {
+        const newList = [...prev];
+        newList[index] = editingBuyItemText.trim();
+        return newList;
+      });
+      setEditingBuyItemIndex(null);
+      setEditingBuyItemText("");
+    } else {
+      handleRemoveBuyItem(index);
+    }
+  };
+
+  const handleCancelEditBuyItem = () => {
+    setEditingBuyItemIndex(null);
+    setEditingBuyItemText("");
+  };
+
   const handleAddCustom = (day) => {
     if (customText.trim()) {
       const newItem = {
@@ -443,7 +478,51 @@ function App() {
           <div className="buy-list-container">
             <ul className="buy-list">
               {stuffToBuy.map((item, idx) => (
-                <li key={idx} className="buy-item">{item}</li>
+                <li key={idx} className="buy-item">
+                  {editingBuyItemIndex === idx ? (
+                    <div className="inline-form" style={{ width: '100%' }}>
+                      <input
+                        type="text"
+                        className="buy-item-input"
+                        value={editingBuyItemText}
+                        onChange={(e) => setEditingBuyItemText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEditBuyItem(idx);
+                          if (e.key === 'Escape') handleCancelEditBuyItem();
+                        }}
+                        autoFocus
+                      />
+                      <button onClick={() => handleSaveEditBuyItem(idx)} className="btn-sm">Save</button>
+                    </div>
+                  ) : (
+                    <>
+                      <span
+                        className="buy-item-text"
+                        onClick={() => handleStartEditBuyItem(idx, item)}
+                        title="Click to edit"
+                      >
+                        {item}
+                      </span>
+                      <div className="buy-item-actions no-print">
+                        <button
+                          className="btn-sm btn-outline"
+                          onClick={() => handleStartEditBuyItem(idx, item)}
+                          title="Edit"
+                        >
+                          ✎
+                        </button>
+                        <button
+                          className="btn-sm btn-outline"
+                          onClick={() => handleRemoveBuyItem(idx)}
+                          title="Remove"
+                          style={{ color: 'var(--color-accent)' }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </li>
               ))}
             </ul>
 
