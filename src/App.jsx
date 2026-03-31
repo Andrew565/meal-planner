@@ -377,180 +377,184 @@ function App() {
       )}
 
       <div className="grid print-container">
-        {/* Quadrant 1: Main Options */}
-        <section className="quadrant no-print q-main">
-          <h2>Main Options</h2>
-          <ul className="item-list">
-            {mainOptions.map(option => (
-              <li key={option.id}>
-                <button
-                  className="item-btn main-item"
-                  onClick={(e) => handleItemClick(e, option)}
-                >
-                  {option.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Quadrant 2: Week's Plan */}
-        <section className="quadrant q-plan print-full">
-          <h2>Week's Plan</h2>
-          <div className="days-list">
-            {DAYS.map((day, dIdx) => (
-              <div key={day} className="day-block">
-                <h3>{FULL_DAYS[dIdx]}</h3>
-                {weeksPlan[day].length === 0 ? (
-                  <p className="empty-text">No items</p>
-                ) : (
-                  <ul className="plan-items">
-                    {weeksPlan[day].map(item => (
-                      <li key={item.id}>
-                        <button
-                          className={`item-btn ${item.type}-item in-plan`}
-                          onClick={(e) => handleItemClick(e, item, day)}
-                        >
-                          {item.name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                <div className="add-custom-container no-print">
-                  {activeCustomDay === day ? (
-                    <div className="add-custom-form inline-form">
-                      <select
-                        value={customType}
-                        onChange={(e) => setCustomType(e.target.value)}
-                        className="custom-type-select"
-                      >
-                        <option value="main">Main</option>
-                        <option value="side">Side</option>
-                      </select>
-                      <input
-                        type="text"
-                        value={customText}
-                        onChange={(e) => setCustomText(e.target.value)}
-                        placeholder="Item name..."
-                        autoFocus
-                        onKeyDown={(e) => { if (e.key === 'Enter') handleAddCustom(day); }}
-                      />
-                      <button onClick={() => handleAddCustom(day)} className="btn-sm">+</button>
-                      <button onClick={() => setActiveCustomDay(null)} className="btn-sm btn-outline">×</button>
-                    </div>
-                  ) : (
-                    <button
-                      className="add-inline-btn"
-                      onClick={() => { setActiveCustomDay(day); setCustomType("main"); setCustomText(""); }}
-                    >
-                      + Add Item
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Quadrant 3: Sides & Such */}
-        <section className="quadrant no-print q-sides">
-          <h2>Sides & Such</h2>
-          <ul className="item-list">
-            {sideOptions.map(option => (
-              <li key={option.id}>
-                <button
-                  className="item-btn side-item"
-                  onClick={(e) => handleItemClick(e, option)}
-                >
-                  {option.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Quadrant 4: Stuff to Buy */}
-        <section className="quadrant q-buy print-full">
-          <h2>Stuff to Buy</h2>
-          <div className="buy-list-container">
-            <ul className="buy-list">
-              {stuffToBuy.map((item, idx) => (
-                <li key={idx} className="buy-item">
-                  {editingBuyItemIndex === idx ? (
-                    <div className="inline-form" style={{ width: '100%' }}>
-                      <input
-                        type="text"
-                        className="buy-item-input"
-                        value={editingBuyItemText}
-                        onChange={(e) => setEditingBuyItemText(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveEditBuyItem(idx);
-                          if (e.key === 'Escape') handleCancelEditBuyItem();
-                        }}
-                        autoFocus
-                      />
-                      <button onClick={() => handleSaveEditBuyItem(idx)} className="btn-sm">Save</button>
-                    </div>
-                  ) : (
-                    <>
-                      <span
-                        className="buy-item-text"
-                        onClick={() => handleStartEditBuyItem(idx, item)}
-                        title="Click to edit"
-                      >
-                        {item}
-                      </span>
-                      <div className="buy-item-actions no-print">
-                        <button
-                          className="btn-sm btn-outline"
-                          onClick={() => handleStartEditBuyItem(idx, item)}
-                          title="Edit"
-                        >
-                          ✎
-                        </button>
-                        <button
-                          className="btn-sm btn-outline"
-                          onClick={() => handleRemoveBuyItem(idx)}
-                          title="Remove"
-                          style={{ color: 'var(--color-accent)' }}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </>
-                  )}
+        <div className="column left-column no-print">
+          {/* Quadrant 1: Main Options */}
+          <section className="quadrant q-main">
+            <h2>Main Options</h2>
+            <ul className="item-list">
+              {mainOptions.map(option => (
+                <li key={option.id}>
+                  <button
+                    className="item-btn main-item"
+                    onClick={(e) => handleItemClick(e, option)}
+                  >
+                    {option.name}
+                  </button>
                 </li>
               ))}
             </ul>
+          </section>
 
-            {!showAddBuyItem ? (
-              <button
-                className="btn add-item-btn no-print"
-                onClick={() => setShowAddBuyItem(true)}
-              >
-                Add Item
-              </button>
-            ) : (
-              <div className="add-item-form no-print">
-                <input
-                  type="text"
-                  value={newBuyItemText}
-                  onChange={(e) => setNewBuyItemText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddBuyItem();
-                    if (e.key === 'Escape') setShowAddBuyItem(false);
-                  }}
-                  placeholder="New item..."
-                  autoFocus
-                />
-                <button className="btn" onClick={handleAddBuyItem}>+</button>
-                <button className="btn btn-outline" onClick={() => setShowAddBuyItem(false)}>Cancel</button>
-              </div>
-            )}
-          </div>
-        </section>
+          {/* Quadrant 3: Sides & Such */}
+          <section className="quadrant q-sides">
+            <h2>Sides & Such</h2>
+            <ul className="item-list">
+              {sideOptions.map(option => (
+                <li key={option.id}>
+                  <button
+                    className="item-btn side-item"
+                    onClick={(e) => handleItemClick(e, option)}
+                  >
+                    {option.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <div className="column right-column">
+          {/* Quadrant 2: Week's Plan */}
+          <section className="quadrant q-plan print-full">
+            <h2>Week's Plan</h2>
+            <div className="days-list">
+              {DAYS.map((day, dIdx) => (
+                <div key={day} className="day-block">
+                  <h3>{FULL_DAYS[dIdx]}</h3>
+                  {weeksPlan[day].length === 0 ? (
+                    <p className="empty-text">No items</p>
+                  ) : (
+                    <ul className="plan-items">
+                      {weeksPlan[day].map(item => (
+                        <li key={item.id}>
+                          <button
+                            className={`item-btn ${item.type}-item in-plan`}
+                            onClick={(e) => handleItemClick(e, item, day)}
+                          >
+                            {item.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <div className="add-custom-container no-print">
+                    {activeCustomDay === day ? (
+                      <div className="add-custom-form inline-form">
+                        <select
+                          value={customType}
+                          onChange={(e) => setCustomType(e.target.value)}
+                          className="custom-type-select"
+                        >
+                          <option value="main">Main</option>
+                          <option value="side">Side</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={customText}
+                          onChange={(e) => setCustomText(e.target.value)}
+                          placeholder="Item name..."
+                          autoFocus
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleAddCustom(day); }}
+                        />
+                        <button onClick={() => handleAddCustom(day)} className="btn-sm">+</button>
+                        <button onClick={() => setActiveCustomDay(null)} className="btn-sm btn-outline">×</button>
+                      </div>
+                    ) : (
+                      <button
+                        className="add-inline-btn"
+                        onClick={() => { setActiveCustomDay(day); setCustomType("main"); setCustomText(""); }}
+                      >
+                        + Add Item
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Quadrant 4: Stuff to Buy */}
+          <section className="quadrant q-buy print-full">
+            <h2>Stuff to Buy</h2>
+            <div className="buy-list-container">
+              <ul className="buy-list">
+                {stuffToBuy.map((item, idx) => (
+                  <li key={idx} className="buy-item">
+                    {editingBuyItemIndex === idx ? (
+                      <div className="inline-form" style={{ width: '100%' }}>
+                        <input
+                          type="text"
+                          className="buy-item-input"
+                          value={editingBuyItemText}
+                          onChange={(e) => setEditingBuyItemText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEditBuyItem(idx);
+                            if (e.key === 'Escape') handleCancelEditBuyItem();
+                          }}
+                          autoFocus
+                        />
+                        <button onClick={() => handleSaveEditBuyItem(idx)} className="btn-sm">Save</button>
+                      </div>
+                    ) : (
+                      <>
+                        <span
+                          className="buy-item-text"
+                          onClick={() => handleStartEditBuyItem(idx, item)}
+                          title="Click to edit"
+                        >
+                          {item}
+                        </span>
+                        <div className="buy-item-actions no-print">
+                          <button
+                            className="btn-sm btn-outline"
+                            onClick={() => handleStartEditBuyItem(idx, item)}
+                            title="Edit"
+                          >
+                            ✎
+                          </button>
+                          <button
+                            className="btn-sm btn-outline"
+                            onClick={() => handleRemoveBuyItem(idx)}
+                            title="Remove"
+                            style={{ color: 'var(--color-accent)' }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+
+              {!showAddBuyItem ? (
+                <button
+                  className="btn add-item-btn no-print"
+                  onClick={() => setShowAddBuyItem(true)}
+                >
+                  Add Item
+                </button>
+              ) : (
+                <div className="add-item-form no-print">
+                  <input
+                    type="text"
+                    value={newBuyItemText}
+                    onChange={(e) => setNewBuyItemText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAddBuyItem();
+                      if (e.key === 'Escape') setShowAddBuyItem(false);
+                    }}
+                    placeholder="New item..."
+                    autoFocus
+                  />
+                  <button className="btn" onClick={handleAddBuyItem}>+</button>
+                  <button className="btn btn-outline" onClick={() => setShowAddBuyItem(false)}>Cancel</button>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
 
       {popover.visible && (
