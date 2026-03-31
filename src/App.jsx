@@ -42,12 +42,22 @@ function App() {
   const [sheetError, setSheetError] = useState("");
 
   const [weeksPlan, setWeeksPlan] = useState(() => {
-    const saved = localStorage.getItem('mealPlannerWeeksPlan');
-    return saved ? JSON.parse(saved) : { Mo: [], Tu: [], We: [], Th: [], Fr: [], Sa: [], Su: [] };
+    try {
+      const saved = localStorage.getItem('mealPlannerWeeksPlan');
+      return saved ? JSON.parse(saved) : { Mo: [], Tu: [], We: [], Th: [], Fr: [], Sa: [], Su: [] };
+    } catch (e) {
+      console.error(e);
+      return { Mo: [], Tu: [], We: [], Th: [], Fr: [], Sa: [], Su: [] };
+    }
   });
   const [stuffToBuy, setStuffToBuy] = useState(() => {
-    const saved = localStorage.getItem('mealPlannerStuffToBuy');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('mealPlannerStuffToBuy');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
   });
 
   const [newBuyItemText, setNewBuyItemText] = useState("");
@@ -253,7 +263,8 @@ function App() {
 
   const handleAddBuyItem = () => {
     if (newBuyItemText.trim() !== '') {
-      setStuffToBuy([...stuffToBuy, newBuyItemText.trim()]);
+      const textToAdd = newBuyItemText.trim();
+      setStuffToBuy(prev => [...prev, textToAdd]);
       setNewBuyItemText('');
     }
   };
