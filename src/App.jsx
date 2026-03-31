@@ -1,36 +1,46 @@
 import { useState, useRef, useEffect } from 'react';
+import Papa from 'papaparse';
 import './index.css';
 
 const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 const FULL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+const DEFAULT_MAIN_OPTIONS = [
+  { id: 'm1', name: "Hot Dogs & Hamburgers", type: 'main' },
+  { id: 'm2', name: "Mexican Chicken and Beef", type: 'main' },
+  { id: 'm3', name: "Pork Tenderloin", type: 'main' },
+  { id: 'm4', name: "Pizza", type: 'main' },
+  { id: 'm5', name: "Mediterranean Chicken", type: 'main' },
+  { id: 'm6', name: "Wontons", type: 'main' },
+  { id: 'm7', name: "Chicken Nuggets", type: 'main' },
+  { id: 'm8', name: "Pasta & Meat", type: 'main' },
+  { id: 'm9', name: "Salsa Verde Chicken/Pork", type: 'main' },
+  { id: 'm10', name: "BBQ Chicken/Pork", type: 'main' },
+];
+
+const DEFAULT_SIDE_OPTIONS = [
+  { id: 's1', name: "Mac & Cheese", type: 'side' },
+  { id: 's2', name: "Carrot Sticks", type: 'side' },
+  { id: 's3', name: "Salad", type: 'side' },
+  { id: 's4', name: "Brussels Sprouts & Balsamic", type: 'side' },
+  { id: 's5', name: "Mashed Potatoes", type: 'side' },
+  { id: 's6', name: "Rice", type: 'side' },
+  { id: 's7', name: "Green Beans", type: 'side' },
+  { id: 's8', name: "Corn on the Cob", type: 'side' },
+  { id: 's9', name: "Potatoes", type: 'side' },
+  { id: 's10', name: "Salad", type: 'side' },
+  { id: 's11', name: "Croissants", type: 'side' },
+  { id: 's12', name: "Fruit", type: 'side' },
+];
+
 function App() {
-  const [mainOptions, setMainOptions] = useState([
-    { id: 'm1', name: "Hot Dogs & Hamburgers", type: 'main' },
-    { id: 'm2', name: "Mexican Chicken and Beef", type: 'main' },
-    { id: 'm3', name: "Pork Tenderloin", type: 'main' },
-    { id: 'm4', name: "Pizza", type: 'main' },
-    { id: 'm5', name: "Mediterranean Chicken", type: 'main' },
-    { id: 'm6', name: "Wontons", type: 'main' },
-    { id: 'm7', name: "Chicken Nuggets", type: 'main' },
-    { id: 'm8', name: "Pasta & Meat", type: 'main' },
-    { id: 'm9', name: "Salsa Verde Chicken/Pork", type: 'main' },
-    { id: 'm10', name: "BBQ Chicken/Pork", type: 'main' },
-  ]);
-  const [sideOptions, setSideOptions] = useState([
-    { id: 's1', name: "Mac & Cheese", type: 'side' },
-    { id: 's2', name: "Carrot Sticks", type: 'side' },
-    { id: 's3', name: "Salad", type: 'side' },
-    { id: 's4', name: "Brussels Sprouts & Balsamic", type: 'side' },
-    { id: 's5', name: "Mashed Potatoes", type: 'side' },
-    { id: 's6', name: "Rice", type: 'side' },
-    { id: 's7', name: "Green Beans", type: 'side' },
-    { id: 's8', name: "Corn on the Cob", type: 'side' },
-    { id: 's9', name: "Potatoes", type: 'side' },
-    { id: 's10', name: "Salad", type: 'side' },
-    { id: 's11', name: "Croissants", type: 'side' },
-    { id: 's12', name: "Fruit", type: 'side' },
-  ]);
+  const [mainOptions, setMainOptions] = useState(DEFAULT_MAIN_OPTIONS);
+  const [sideOptions, setSideOptions] = useState(DEFAULT_SIDE_OPTIONS);
+  const [sheetUrl, setSheetUrl] = useState("");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLoadingSheet, setIsLoadingSheet] = useState(false);
+  const [sheetError, setSheetError] = useState("");
+
   const [weeksPlan, setWeeksPlan] = useState({
     Mo: [], Tu: [], We: [], Th: [], Fr: [], Sa: [], Su: []
   });
@@ -52,6 +62,108 @@ function App() {
   });
 
   const popoverRef = useRef(null);
+
+  const loadSheetData = async (url) => {
+    if (!url) {
+      setMainOptions(DEFAULT_MAIN_OPTIONS);
+      setSideOptions(DEFAULT_SIDE_OPTIONS);
+      return;
+    }
+
+    setIsLoadingSheet(true);
+    setSheetError("");
+
+    try {
+      let sheetId = url;
+      const match = url.match(/\/d\/(.*?)\//);
+      if (match && match[1]) {
+        sheetId = match[1];
+      }
+      
+      const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+
+      Papa.parse(exportUrl, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          if (results.errors.length && results.data.length === 0) {
+            setSheetError("Failed to parse CSV. Make sure the sheet is public.");
+            setIsLoadingSheet(false);
+            return;
+          }
+
+          const newMains = [];
+          const newSides = [];
+
+          results.data.forEach((row, index) => {
+            const name = row['Name'] || row['name'] || row['Title'] || row['title'];
+            const typeStr = (row['Type'] || row['type'] || "").toLowerCase();
+            
+            if (!name) return; // Skip rows without name
+
+            const item = {
+              id: `sheet-${index}`,
+              name: name.trim(),
+              type: typeStr === 'side' ? 'side' : 'main'
+            };
+
+            if (item.type === 'side') {
+              newSides.push(item);
+            } else {
+              newMains.push(item);
+            }
+          });
+
+          if (newMains.length === 0 && newSides.length === 0) {
+            setSheetError("Could not find 'Name' or 'Type' columns in the sheet.");
+            setMainOptions(DEFAULT_MAIN_OPTIONS);
+            setSideOptions(DEFAULT_SIDE_OPTIONS);
+            setIsLoadingSheet(false);
+            return;
+          }
+
+          setMainOptions(newMains);
+          setSideOptions(newSides);
+          setIsLoadingSheet(false);
+        },
+        error: (err) => {
+          console.error(err);
+          setSheetError("Could not fetch the Google Sheet. Make sure it is set to 'Anyone with the link can view'.");
+          setMainOptions(DEFAULT_MAIN_OPTIONS);
+          setSideOptions(DEFAULT_SIDE_OPTIONS);
+          setIsLoadingSheet(false);
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      setSheetError("An unexpected error occurred.");
+      setMainOptions(DEFAULT_MAIN_OPTIONS);
+      setSideOptions(DEFAULT_SIDE_OPTIONS);
+      setIsLoadingSheet(false);
+    }
+  };
+
+  useEffect(() => {
+    const savedUrl = localStorage.getItem('mealPlannerSheetUrl');
+    if (savedUrl) {
+      setSheetUrl(savedUrl);
+      loadSheetData(savedUrl);
+    }
+  }, []);
+
+  const handleSaveSettings = () => {
+    localStorage.setItem('mealPlannerSheetUrl', sheetUrl);
+    loadSheetData(sheetUrl);
+  };
+
+  const handleClearSettings = () => {
+    setSheetUrl("");
+    localStorage.removeItem('mealPlannerSheetUrl');
+    setMainOptions(DEFAULT_MAIN_OPTIONS);
+    setSideOptions(DEFAULT_SIDE_OPTIONS);
+    setSheetError("");
+  };
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -181,10 +293,34 @@ function App() {
       <header className="header no-print">
         <h1>Meal Planner</h1>
         <div className="header-buttons">
+          <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} className="btn btn-outline">Settings</button>
           <button onClick={copyToClipboard} className="btn">Copy to Clipboard</button>
           <button onClick={handlePrint} className="btn btn-outline">Print</button>
         </div>
       </header>
+
+      {isSettingsOpen && (
+        <div className="settings-panel no-print">
+          <h2>Google Sheets Integration</h2>
+          <p>You can link a Google Sheet to fetch your custom main and side options.</p>
+          <p className="help-text" style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1rem' }}>
+            <strong>Requirements:</strong> The sheet must be public ("Anyone with the link can view") and have columns labeled "Name" and "Type" (where Type is either "main" or "side").
+          </p>
+          <div className="inline-form" style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <input 
+              type="text" 
+              placeholder="Paste Google Sheet URL here..." 
+              value={sheetUrl}
+              onChange={(e) => setSheetUrl(e.target.value)}
+              style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+            <button className="btn" onClick={handleSaveSettings}>Save & Fetch</button>
+            <button className="btn btn-outline" onClick={handleClearSettings}>Clear</button>
+          </div>
+          {isLoadingSheet && <p className="loading-text" style={{ color: '#0066cc' }}>Loading sheet data...</p>}
+          {sheetError && <p className="error-text" style={{ color: '#cc0000' }}>{sheetError}</p>}
+        </div>
+      )}
 
       <div className="grid print-container">
         {/* Quadrant 1: Main Options */}
